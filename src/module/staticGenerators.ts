@@ -1,10 +1,11 @@
 import { ActionTree, GetterTree, Module as Mod, MutationTree } from 'vuex'
 import { DynamicModuleOptions } from '../moduleoptions'
+import { Statics } from './statics'
 
 export function staticStateGenerator<S extends Object>(
   module: Function & Mod<S, any>,
   modOpt: DynamicModuleOptions,
-  statics: any
+  statics: Statics
 ) {
   const state: S = modOpt.stateFactory ? (module as any).state() : module.state
   Object.keys(state).forEach((key) => {
@@ -14,7 +15,7 @@ export function staticStateGenerator<S extends Object>(
         Object.defineProperty(statics, key, {
           get() {
             const path = modOpt.name.split('/')
-            let data = statics.store.state
+            let data = statics._store.state
             for (let segment of path) {
               data = data[segment]
             }
@@ -29,19 +30,19 @@ export function staticStateGenerator<S extends Object>(
 export function staticGetterGenerator<S>(
   module: Function & Mod<S, any>,
   modOpt: DynamicModuleOptions,
-  statics: any
+  statics: Statics
 ) {
   Object.keys(module.getters as GetterTree<S, any>).forEach((key) => {
     if (module.namespaced) {
       Object.defineProperty(statics, key, {
         get() {
-          return statics.store.getters[`${modOpt.name}/${key}`]
+          return statics._store.getters[`${modOpt.name}/${key}`]
         }
       })
     } else {
       Object.defineProperty(statics, key, {
         get() {
-          return statics.store.getters[key]
+          return statics._store.getters[key]
         }
       })
     }
@@ -51,16 +52,16 @@ export function staticGetterGenerator<S>(
 export function staticMutationGenerator<S>(
   module: Function & Mod<S, any>,
   modOpt: DynamicModuleOptions,
-  statics: any
+  statics: Statics
 ) {
   Object.keys(module.mutations as MutationTree<S>).forEach((key) => {
     if (module.namespaced) {
       statics[key] = function (...args: any[]) {
-        statics.store.commit(`${modOpt.name}/${key}`, ...args)
+        statics._store.commit(`${modOpt.name}/${key}`, ...args)
       }
     } else {
       statics[key] = function (...args: any[]) {
-        statics.store.commit(key, ...args)
+        statics._store.commit(key, ...args)
       }
     }
   })
@@ -69,16 +70,16 @@ export function staticMutationGenerator<S>(
 export function staticActionGenerators<S>(
   module: Function & Mod<S, any>,
   modOpt: DynamicModuleOptions,
-  statics: any
+  statics: Statics
 ) {
   Object.keys(module.actions as ActionTree<S, any>).forEach((key) => {
     if (module.namespaced) {
       statics[key] = async function (...args: any[]) {
-        return statics.store.dispatch(`${modOpt.name}/${key}`, ...args)
+        return statics._store.dispatch(`${modOpt.name}/${key}`, ...args)
       }
     } else {
       statics[key] = async function (...args: any[]) {
-        return statics.store.dispatch(key, ...args)
+        return statics._store.dispatch(key, ...args)
       }
     }
   })

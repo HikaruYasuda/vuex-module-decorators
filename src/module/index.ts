@@ -8,6 +8,7 @@ import {
   staticMutationGenerator,
   staticStateGenerator
 } from './staticGenerators'
+import { Statics } from './statics'
 
 function registerDynamicModule<S>(module: Mod<S, any>, modOpt: DynamicModuleOptions) {
   if (!modOpt.name) {
@@ -75,8 +76,8 @@ function moduleDecoratorFactory<S>(moduleOptions: ModuleOptions) {
     if (modOpt.name) {
       Object.defineProperty(constructor, '_genStatic', {
         value: (store?: Store<any>) => {
-          let statics = { store: store || modOpt.store }
-          if (!statics.store) {
+          const statics: Statics = { _store: store || modOpt.store }
+          if (!statics._store) {
             throw new Error(`ERR_STORE_NOT_PROVIDED: To use getModule(), either the module
             should be decorated with store in decorator, i.e. @Module({store: store}) or
             store should be passed when calling getModule(), i.e. getModule(MyModule, this.$store)`)
